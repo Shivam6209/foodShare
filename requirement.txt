@@ -1,0 +1,58 @@
+FoodShare – Community Food Donation & Request Platform
+Scenario
+Surplus food goes to waste while others go hungry. Neighbors struggle to coordinate pickups and donations in real time.
+
+🎯 Objective
+Build a community hub where users can post food donations or request meals, browse nearby offers/needs, claim or fulfill posts, and track pickups, all with simple mapping and status flows.
+
+👥 User Role: user
+All users can post donations or requests; each post has an owner and status flow.
+
+🔐 Authentication & Authorization
+Login required to post or claim donations/requests
+Public browsing of posts allowed without login
+🧱 Core Functional Modules
+Post Donation / Request
+Form: Type (Donate or Request), Description, Quantity, Pickup Location (text or map pin), Expiry Date
+Public Feed & Map View
+List & map pins of all active posts
+Filters: Type, Expiry soon, Distance (mocked)
+Claim & Confirm Flow
+“Claim” button on donation posts
+Owner approves claim → status moves Claimed → Picked Up
+Status Tracking
+Timeline on each post: Posted → Claimed → Picked Up → Completed
+Auto-expire after Expiry Date → Expired status
+Notifications
+In-app/reminders when your claim is approved
+Warning near expiry: “Your request expires in 1 day”
+History & Reputation
+User profile shows:
+Total donations made/received
+Ratings (1–5 stars) from claimers or donors
+Users can rate each other post-pickup
+
+🧱Before proceeding with any changes, please ensure the following steps are followed:🧱
+
+1. *Revert any previously incorrect implementations* to maintain codebase integrity.
+
+2. *Standardize Data Fetching via Services*:
+   - For example, in the Dashboard module, use the dashboardService to fetch data.
+   - Define a function like:
+
+     javascript
+     getDashboardData(someParam) {
+       // Call the backend API (to be implemented later) call the relevent API and comment that later it will get uncommented when API will be implemented
+       // For now, return some dummy/mock data
+     }
+     
+
+   - Always call this function from the component (e.g., Dashboard component) to retrieve data.
+
+3. *Maintain Consistency Across Modules*:
+   - Apply this approach uniformly across all modules in the project.
+   - This ensures better separation of concerns, easier testing, and maintainable code.
+
+✅ This pattern promotes a clean architecture and facilitates scalability.
+
+🔁 Consistency is key. Ensure every module adheres to this structure.
