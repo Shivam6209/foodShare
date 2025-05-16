@@ -1,14 +1,24 @@
+"use client";
+
+import React, { useEffect } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "FoodShare - Community Food Donation & Request Platform",
-  description: "A community hub where users can post food donations or request meals",
+// Add metadata via a separate component since we're now using client
+const Metadata = () => {
+  // This will run on the client only
+  useEffect(() => {
+    document.title = "FoodShare - Community Food Donation & Request Platform";
+  }, []);
+  
+  return null;
 };
 
 export default function RootLayout({
@@ -19,11 +29,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        <AuthProvider>
+          <ToastProvider>
+            <Metadata />
+            <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

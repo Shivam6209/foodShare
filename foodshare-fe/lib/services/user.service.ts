@@ -25,9 +25,8 @@ class UserService {
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      // In a real implementation, this would get the current user from an auth context
-      // For now, we'll return a mock user
-      return await apiService.get<User>('/users/user-1');
+      // Get the current user from the API 
+      return await apiService.get<User>('/users/profile');
     } catch (error) {
       console.error('Error fetching current user:', error);
       return null;
@@ -36,16 +35,30 @@ class UserService {
 
   /**
    * Update user profile
-   * @param userData - Updated user data
+   * @param userData - Updated user data 
    * @returns Promise with the updated user
    */
-  async updateProfile(userData: Partial<User>): Promise<User> {
-    const currentUser = await this.getCurrentUser();
-    if (!currentUser) {
-      throw new Error('No user logged in');
+  async updateProfile(userData: Partial<User> & { currentPassword?: string }): Promise<User> {
+    try {
+      // Use the direct update endpoint without OTP
+      console.log("Using direct profile update");
+      return await apiService.post<User>('/users/profile-update', userData);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      
+      // Check if this is an authentication error
+      if (error instanceof Error && (error.message.includes('Authentication') || error.message.includes('401'))) {
+        // Force logout and redirect to login
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
+          window.location.href = '/login';
+        }
+      }
+      
+      throw error;
     }
-    
-    return apiService.put<User>(`/users/${currentUser.id}`, userData);
   }
 
   /**

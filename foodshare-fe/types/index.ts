@@ -22,13 +22,9 @@ export enum PostStatus {
 }
 
 /**
- * Location with coordinates and address
+ * Location as a simple string address
  */
-export interface Location {
-  address: string;
-  latitude?: number;
-  longitude?: number;
-}
+export type Location = string;
 
 /**
  * User profile data
@@ -37,6 +33,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   avatar?: string;
   donationsCount: number;
   receivedCount: number;
@@ -56,6 +53,8 @@ export interface FoodPost {
   expiryDate: string;
   status: PostStatus;
   createdAt: string;
+  updatedAt?: string;
+  urgency?: string;
   ownerId: string;
   owner?: User;
   claimerId?: string;

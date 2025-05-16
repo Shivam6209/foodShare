@@ -1,0 +1,2 @@
+# This file is included for compatibility with Render's build process
+# The actual dependencies are managed through package.json 

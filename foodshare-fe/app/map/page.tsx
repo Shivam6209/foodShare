@@ -6,6 +6,12 @@ import { PostType } from "@/types";
 import { postService } from "@/lib/services";
 import Link from "next/link";
 
+// Function to handle location display
+function getLocationText(location: any): string {
+  if (!location) return '';
+  return typeof location === 'string' ? location : location.address || '';
+}
+
 // We need to make the component async because we're fetching data
 export default async function MapPage() {
   // Fetch all posts
@@ -103,7 +109,7 @@ export default async function MapPage() {
                               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                               <circle cx="12" cy="10" r="3"></circle>
                             </svg>
-                            <span className="line-clamp-1">{post.location.address}</span>
+                            <span className="line-clamp-1">{getLocationText(post.location)}</span>
                           </div>
                         </div>
                       </Link>

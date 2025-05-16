@@ -7,7 +7,8 @@
 
 export const config = {
   api: {
-    url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+    // Note: NestJS serves endpoints at root level, not under /api path
+    url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
   },
   auth: {
     domain: process.env.NEXT_PUBLIC_AUTH_DOMAIN || '',

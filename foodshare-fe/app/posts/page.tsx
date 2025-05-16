@@ -1,35 +1,75 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PostType, PostStatus } from "@/types";
+import { PostType, PostStatus, FoodPost } from "@/types";
 import { postService } from "@/lib/services";
+import { useSearchParams } from 'next/navigation';
+import { PostCard } from "@/components/PostCard";
+import { useAuth } from "@/components/auth/auth-provider";
 
-// We need to make the component async because we're fetching data
-export default async function PostsPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default function PostsPage() {
+  const { isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
+  const [posts, setPosts] = useState<FoodPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   // Parse type filter from query param
-  const typeFilter = typeof searchParams.type === 'string'
-    ? searchParams.type as PostType
-    : undefined;
+  const typeParam = searchParams.get('type');
+  const typeFilter = typeParam ? typeParam as PostType : undefined;
 
   // Parse status filter from query param
-  const statusFilter = typeof searchParams.status === 'string'
-    ? searchParams.status
-    : undefined;
+  const statusFilter = searchParams.get('status') || undefined;
 
-  // Fetch posts with filters
-  const posts = await postService.getPosts({
-    type: typeFilter as PostType | undefined,
-    status: statusFilter,
-    expiryFilter: typeof searchParams.expiry === 'string'
-      ? (searchParams.expiry as 'soon' | 'all')
-      : undefined,
-  });
+  // Parse expiry filter
+  const expiryParam = searchParams.get('expiry');
+  const expiryFilter = expiryParam ? expiryParam as 'soon' | 'all' : undefined;
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        setLoading(true);
+        const postsData = await postService.getPosts({
+          type: typeFilter,
+          status: statusFilter,
+          expiryFilter: expiryFilter,
+        });
+        setPosts(postsData);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+        setError("Failed to load posts. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchPosts();
+  }, [typeFilter, statusFilter, expiryFilter]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="mt-4 text-muted-foreground">Loading posts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-8">
+        <div className="rounded-lg bg-red-50 p-4 mb-6 text-sm text-red-800">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -122,7 +162,7 @@ export default async function PostsPage({
                         }
                       >
                         <Badge 
-                          variant={!searchParams.expiry ? 'default' : 'outline'} 
+                          variant={!expiryFilter ? 'default' : 'outline'} 
                           className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
                         >
                           All
@@ -140,7 +180,7 @@ export default async function PostsPage({
                         }
                       >
                         <Badge 
-                          variant={searchParams.expiry === 'soon' ? 'default' : 'outline'} 
+                          variant={expiryFilter === 'soon' ? 'default' : 'outline'} 
                           className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
                         >
                           Expiring Soon
@@ -154,11 +194,19 @@ export default async function PostsPage({
               <div className="rounded-lg border bg-card p-4 shadow-sm">
                 <h3 className="mb-4 text-lg font-medium">Create a Post</h3>
                 <p className="mb-4 text-sm text-muted-foreground">
-                  Have food to share or need something? Create your own post!
+                  {isAuthenticated 
+                    ? "Have food to share or need something? Create your own post!" 
+                    : "Sign in to create your own post and start sharing."}
                 </p>
-                <Link href="/post/new">
-                  <Button className="w-full">Create Post</Button>
-                </Link>
+                {isAuthenticated ? (
+                  <Link href="/post/new">
+                    <Button className="w-full">Create Post</Button>
+                  </Link>
+                ) : (
+                  <Link href="/login">
+                    <Button className="w-full">Sign in to Post</Button>
+                  </Link>
+                )}
               </div>
             </div>
             
@@ -182,52 +230,20 @@ export default async function PostsPage({
                   </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
                   {posts.map((post) => (
-                    <Card key={post.id} className="group overflow-hidden border rounded-xl transition-all hover:shadow-md hover:border-primary/20">
-                      <CardHeader className="p-6 pb-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <Badge variant={post.type === PostType.DONATION ? "default" : "secondary"} className="px-3 py-1 rounded-full">
-                            {post.type === PostType.DONATION ? 'Donation' : 'Request'}
-                          </Badge>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(post.expiryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                          </div>
-                        </div>
-                        <CardTitle className="text-xl group-hover:text-primary transition-colors">{post.title}</CardTitle>
-                        <CardDescription className="flex items-center gap-1 mt-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                          </svg>
-                          {post.location.address}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-6 pt-0">
-                        <p className="line-clamp-3 text-muted-foreground">{post.description}</p>
-                        <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z"></path>
-                            <path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z"></path>
-                            <path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z"></path>
-                            <path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z"></path>
-                            <path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z"></path>
-                          </svg>
-                          <span>Quantity: {post.quantity}</span>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-6 pt-0">
-                        <Link href={`/post/${post.id}`} className="w-full">
-                          <Button variant="outline" className="w-full rounded-full border-primary text-primary transition-colors hover:bg-primary hover:text-primary-foreground">
-                            View Details
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
-                              <path d="M5 12h14"></path>
-                              <path d="m12 5 7 7-7 7"></path>
-                            </svg>
-                          </Button>
-                        </Link>
-                      </CardFooter>
-                    </Card>
+                    <PostCard 
+                      key={post.id}
+                      id={post.id}
+                      title={post.title}
+                      description={post.description}
+                      location={post.location}
+                      expiryDate={post.expiryDate}
+                      quantity={post.quantity}
+                      type={post.type}
+                      createdAt={post.createdAt}
+                      urgency={post.urgency}
+                    />
                   ))}
                 </div>
               )}

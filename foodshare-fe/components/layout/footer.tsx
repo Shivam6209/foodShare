@@ -4,22 +4,24 @@ export function Footer() {
   return (
     <footer className="border-t bg-muted/30 py-6">
       <div className="container max-w-full px-6 md:px-8">
-        <div className="flex flex-col md:flex-row justify-between mb-4">
-          <div className="mb-4 md:mb-0 max-w-xs">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {/* Logo and description */}
+          <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-2">
               <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-primary">
                 <span className="text-lg font-bold text-primary-foreground">F</span>
               </div>
               <span className="text-lg font-bold tracking-tight">FoodShare</span>
             </Link>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground max-w-md">
               Connecting communities to reduce food waste and fight hunger through simple food sharing.
             </p>
           </div>
           
-          <div className="mb-4 md:mb-0">
+          {/* Quick links */}
+          <div>
             <h3 className="text-base font-semibold mb-2">Quick Links</h3>
-            <div className="grid grid-cols-2 gap-x-12 gap-y-1">
+            <div className="grid grid-cols-1 gap-1">
               <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 About Us
               </Link>
@@ -32,15 +34,21 @@ export function Footer() {
               <Link href="/post/new" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Create a Post
               </Link>
-              <Link href="/map" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Food Map
-              </Link>
+            </div>
+          </div>
+          
+          {/* Contact info - simplified */}
+          <div>
+            <h3 className="text-base font-semibold mb-2">Contact</h3>
+            <div className="text-sm text-muted-foreground">
+              <p>contact@foodshare.org</p>
+              <p>+1 (123) 456-7890</p>
             </div>
           </div>
         </div>
 
         <div className="border-t pt-4 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-xs text-muted-foreground mb-3 md:mb-0">
+          <p className="text-xs text-muted-foreground mb-2 md:mb-0">
             &copy; {new Date().getFullYear()} FoodShare. All rights reserved.
           </p>
           

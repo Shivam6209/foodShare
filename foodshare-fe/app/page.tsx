@@ -1,15 +1,35 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { PostType } from "@/types";
+import { PostType, FoodPost } from "@/types";
 import { postService } from "@/lib/services";
 import { Badge } from "@/components/ui/badge";
+import { PostCard } from "@/components/PostCard";
+import { useAuth } from "@/components/auth/auth-provider";
 
 // We need to make the component async because we're fetching data
-export default async function Home() {
-  // Fetch featured posts (limiting to 3 for the homepage)
-  const posts = await postService.getPosts();
-  const featuredPosts = posts.slice(0, 3);
+export default function Home() {
+  const { isAuthenticated } = useAuth();
+  const [featuredPosts, setFeaturedPosts] = useState<FoodPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const posts = await postService.getPosts();
+        setFeaturedPosts(posts.slice(0, 3)); // Get first 3 posts
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPosts();
+  }, []);
 
   return (
     <div className="flex flex-col">
@@ -215,50 +235,17 @@ export default async function Home() {
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 py-12 md:grid-cols-2 lg:grid-cols-3">
             {featuredPosts.map((post) => (
-              <Card key={post.id} className="group overflow-hidden border rounded-xl transition-all hover:shadow-md hover:border-primary/20">
-                <CardHeader className="p-6 pb-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <Badge variant={post.type === PostType.DONATION ? "default" : "secondary"} className="px-3 py-1 rounded-full">
-                      {post.type === PostType.DONATION ? 'Donation' : 'Request'}
-                    </Badge>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(post.expiryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </div>
-                  </div>
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{post.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-1 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                      <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    {post.location.address}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <p className="line-clamp-3 text-muted-foreground">{post.description}</p>
-                  <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z"></path>
-                      <path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z"></path>
-                      <path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z"></path>
-                      <path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z"></path>
-                      <path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z"></path>
-                    </svg>
-                    <span>Quantity: {post.quantity}</span>
-                  </div>
-                </CardContent>
-                <CardFooter className="p-6 pt-0">
-                  <Link href={`/post/${post.id}`} className="w-full">
-                    <Button variant="outline" className="w-full rounded-full border-primary text-primary transition-colors hover:bg-primary hover:text-primary-foreground">
-                      View Details
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
-                        <path d="M5 12h14"></path>
-                        <path d="m12 5 7 7-7 7"></path>
-                      </svg>
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
+              <PostCard 
+                key={post.id}
+                id={post.id}
+                title={post.title}
+                description={post.description}
+                location={post.location}
+                expiryDate={post.expiryDate}
+                quantity={post.quantity}
+                type={post.type}
+                createdAt={post.createdAt}
+              />
             ))}
             
             <Link href="/posts" className="col-span-full flex justify-center mt-4">
@@ -351,11 +338,13 @@ export default async function Home() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 pt-6">
-              <Link href="/register">
-                <Button size="lg" className="shadow-lg w-full sm:w-auto rounded-full px-8 bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 transition-all duration-300 hover:shadow-xl hover:scale-105">
-                  Sign Up Now
-                </Button>
-              </Link>
+              {!isAuthenticated && (
+                <Link href="/register">
+                  <Button size="lg" className="shadow-lg w-full sm:w-auto rounded-full px-8 bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                    Sign Up Now
+                  </Button>
+                </Link>
+              )}
               <Link href="/about">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full border-primary text-primary px-8 shadow-sm transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:scale-105">
                   Learn More
