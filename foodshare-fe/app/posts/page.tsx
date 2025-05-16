@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { PostCard } from "@/components/PostCard";
 import { useAuth } from "@/components/auth/auth-provider";
 
-export default function PostsPage() {
+function PostsList() {
   const { isAuthenticated } = useAuth();
   const searchParams = useSearchParams();
   const [posts, setPosts] = useState<FoodPost[]>([]);
@@ -252,5 +252,25 @@ export default function PostsPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// Loading fallback component
+function PostsLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="mt-4 text-muted-foreground">Loading posts...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function PostsPage() {
+  return (
+    <Suspense fallback={<PostsLoading />}>
+      <PostsList />
+    </Suspense>
   );
 } 

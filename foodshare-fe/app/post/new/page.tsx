@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 
-export default function NewPostPage() {
+function NewPostForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -423,5 +423,25 @@ export default function NewPostPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// Loading fallback component
+function NewPostLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="mt-4 text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function NewPostPage() {
+  return (
+    <Suspense fallback={<NewPostLoading />}>
+      <NewPostForm />
+    </Suspense>
   );
 } 

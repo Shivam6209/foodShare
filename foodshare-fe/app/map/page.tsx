@@ -1,8 +1,10 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useEffect, Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PostType } from "@/types";
+import { PostType, FoodPost } from "@/types";
 import { postService } from "@/lib/services";
 import Link from "next/link";
 
@@ -12,10 +14,48 @@ function getLocationText(location: any): string {
   return typeof location === 'string' ? location : location.address || '';
 }
 
-// We need to make the component async because we're fetching data
-export default async function MapPage() {
-  // Fetch all posts
-  const posts = await postService.getPosts();
+function MapContent() {
+  const [posts, setPosts] = useState<FoodPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        setLoading(true);
+        const postsData = await postService.getPosts();
+        setPosts(postsData);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+        setError("Failed to load posts. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchPosts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="mt-4 text-muted-foreground">Loading map data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-8">
+        <div className="rounded-lg bg-red-50 p-4 mb-6 text-sm text-red-800">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -184,5 +224,26 @@ export default async function MapPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// Loading fallback component
+function MapLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="mt-4 text-muted-foreground">Loading map...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense
+export default function MapPage() {
+  return (
+    <Suspense fallback={<MapLoading />}>
+      <MapContent />
+    </Suspense>
   );
 } 

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, CheckCircle } from "lucide-react";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -124,5 +124,38 @@ export default function VerifyEmailPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function VerifyEmailLoading() {
+  return (
+    <div className="flex min-h-[calc(100vh-16rem)] flex-col items-center justify-center py-12">
+      <div className="container max-w-md px-4">
+        <div className="mb-8 text-center">
+          <div className="relative flex h-10 w-10 mx-auto items-center justify-center rounded-full bg-primary">
+            <span className="text-xl font-bold text-primary-foreground">F</span>
+          </div>
+          <h1 className="mt-6 text-3xl font-bold tracking-tight">Email Verification</h1>
+        </div>
+        
+        <Card className="border-none shadow-lg">
+          <CardContent className="space-y-4 text-center py-12">
+            <div className="flex flex-col items-center justify-center">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+              <p className="mt-4 text-muted-foreground">Loading...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<VerifyEmailLoading />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 } 

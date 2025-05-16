@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 // Update API URL to use environment variable
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-export default function EmailLoginPage() {
+function EmailLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -271,5 +271,20 @@ export default function EmailLoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function EmailLoginLoading() {
+  return <div className="flex min-h-[calc(100vh-16rem)] flex-col items-center justify-center py-6">
+    <div className="animate-pulse">Loading...</div>
+  </div>;
+}
+
+export default function EmailLoginPage() {
+  return (
+    <Suspense fallback={<EmailLoginLoading />}>
+      <EmailLoginForm />
+    </Suspense>
   );
 } 
